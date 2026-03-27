@@ -1,0 +1,175 @@
+<!DOCTYPE html>
+<html lang="sk">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Môj Týždenný Plánovač</title>
+    <style>
+        :root { --primary: #6366f1; --success: #10b981; --bg: #f1f5f9; --text: #1e293b; }
+        body { font-family: 'Segoe UI', system-ui, sans-serif; background: var(--bg); color: var(--text); display: flex; justify-content: center; padding: 20px; }
+        .card { background: white; padding: 1.5rem; border-radius: 24px; box-shadow: 0 15px 35px rgba(0,0,0,0.1); width: 100%; max-width: 480px; }
+        
+        h2 { text-align: center; margin-bottom: 5px; color: var(--primary); }
+        .info { text-align: center; font-size: 0.8rem; color: #64748b; margin-bottom: 20px; }
+
+        /* Styling pre jednotlivé tréningové bloky */
+        .training-block { 
+            background: #ffffff; border: 2px solid #e2e8f0; border-radius: 15px; 
+            padding: 12px 15px; margin-bottom: 12px; transition: all 0.3s ease;
+            display: flex; align-items: flex-start; gap: 12px;
+        }
+        .training-block:has(input:checked) { 
+            background: #f8fafc; border-color: var(--success); opacity: 0.7; 
+        }
+        
+        .training-content { flex-grow: 1; }
+        .training-title { font-weight: 800; font-size: 0.95rem; display: block; color: #334155; }
+        .training-details { font-size: 0.85rem; color: #64748b; line-height: 1.4; }
+
+        input[type="checkbox"] { 
+            width: 26px; height: 26px; cursor: pointer; accent-color: var(--success); 
+            margin-top: 5px; flex-shrink: 0;
+        }
+
+        /* Progress sekcia */
+        .progress-section { 
+            background: #1e293b; color: white; padding: 20px; border-radius: 18px; 
+            margin-top: 25px; text-align: center; 
+        }
+        .percent { font-size: 2.5rem; font-weight: 900; display: block; color: var(--success); }
+        .bar-bg { background: #334155; height: 12px; border-radius: 6px; margin: 15px 0; overflow: hidden; }
+        .bar-fill { background: var(--success); height: 100%; width: 0%; transition: width 0.6s cubic-bezier(0.175, 0.885, 0.32, 1.275); }
+
+        .btn-reset { 
+            width: 100%; padding: 12px; margin-top: 15px; background: none; 
+            border: 1px dashed #cbd5e1; color: #94a3b8; border-radius: 10px; 
+            cursor: pointer; font-size: 0.8rem; 
+        }
+        .btn-reset:hover { border-color: #ef4444; color: #ef4444; }
+
+        .section-label { font-size: 0.75rem; font-weight: bold; text-transform: uppercase; color: #94a3b8; margin: 20px 0 10px 5px; display: block; }
+    </style>
+</head>
+<body>
+
+<div class="card">
+    <h2>Môj Tréning</h2>
+    <p class="info">Po - Po • Automatický reset v utorok</p>
+
+    <span class="section-label">Silové tréningy</span>
+    
+    <div class="training-block">
+        <input type="checkbox" id="t1" class="goal">
+        <div class="training-content">
+            <span class="training-title">Tréning 1: Nohy & Stabilita</span>
+            <span class="training-details">Drepy, Výpady, Mŕtve ťahy, Lýtka, Skoky na bedňu</span>
+        </div>
+    </div>
+
+    <div class="training-block">
+        <input type="checkbox" id="t2" class="goal">
+        <div class="training-content">
+            <span class="training-title">Tréning 2: Horné telo</span>
+            <span class="training-details">Biceps, Ramená, Triceps, Predpažovanie, Pumpovanie</span>
+        </div>
+    </div>
+
+    <div class="training-block">
+        <input type="checkbox" id="t3" class="goal">
+        <div class="training-content">
+            <span class="training-title">Tréning 3: Core & Kliky</span>
+            <span class="training-details">Kliky, Plank, Brušáky, Bench press</span>
+        </div>
+    </div>
+
+    <span class="section-label">Kardio (1x pre 100% + bonusy)</span>
+    <div class="training-block">
+        <input type="checkbox" id="c1" class="goal">
+        <div class="training-content">
+            <span class="training-title">🚲 Bicykel / ⛸️ Korčule / 🏊 Plávanie</span>
+            <div style="display: flex; gap: 10px; margin-top: 5px;">
+                <label style="font-size: 0.75rem;"><input type="checkbox" id="c2" class="bonus" style="width:15px; height:15px; margin-top:0"> Bonus 1</label>
+                <label style="font-size: 0.75rem;"><input type="checkbox" id="c3" class="bonus" style="width:15px; height:15px; margin-top:0"> Bonus 2</label>
+            </div>
+        </div>
+    </div>
+
+    <span class="section-label">Doplnky</span>
+    <div class="training-block">
+        <input type="checkbox" id="w1" class="goal">
+        <div class="training-content">
+            <span class="training-title">🚶 Prechádzka</span>
+            <span class="training-details">Aspoň 3km pre regeneráciu</span>
+        </div>
+    </div>
+
+    <div class="progress-section">
+        <span class="percent"><span id="percent-num">0</span>%</span>
+        <div class="bar-bg"><div id="bar-fill" class="bar-fill"></div></div>
+        <div id="status-msg">Ešte si nezačal? Do toho!</div>
+    </div>
+
+    <button class="btn-reset" onclick="manualReset()">Vynulovať týždeň manuálne</button>
+</div>
+
+<script>
+    const goals = document.querySelectorAll('.goal');
+    const bonuses = document.querySelectorAll('.bonus');
+    const all = document.querySelectorAll('input[type="checkbox"]');
+
+    // AUTO RESET LOGIKA
+    function checkAutoReset() {
+        const now = new Date();
+        const currentWeek = getWeekNumber(now);
+        const lastReset = localStorage.getItem('lastResetWeek');
+        // Ak je utorok (2) a v tomto týždni ešte nebol reset
+        if (now.getDay() === 2 && lastReset !== String(currentWeek)) {
+            performReset();
+            localStorage.setItem('lastResetWeek', currentWeek);
+        }
+    }
+
+    function getWeekNumber(d) {
+        d = new Date(Date.UTC(d.getFullYear(), d.getMonth(), d.getDate()));
+        d.setUTCDate(d.getUTCDate() + 4 - (d.getUTCDay()||7));
+        return Math.ceil((((d - new Date(Date.UTC(d.getUTCFullYear(),0,1))) / 86400000) + 1)/7);
+    }
+
+    // UPDATE PROGRESU
+    function update() {
+        const checkedGoals = Array.from(goals).filter(i => i.checked).length;
+        const checkedBonuses = Array.from(bonuses).filter(i => i.checked).length;
+        
+        // 5 základných cieľov (T1, T2, T3, Kardio1, Prechádzka) = 100%
+        let pct = Math.round((checkedGoals / 5) * 100) + (checkedBonuses * 20);
+        
+        document.getElementById('percent-num').innerText = pct;
+        document.getElementById('bar-fill').style.width = Math.min(pct, 100) + "%";
+        
+        const msg = document.getElementById('status-msg');
+        if (pct >= 120) msg.innerText = "SI STROJ! 🔥🔥";
+        else if (pct >= 100) msg.innerText = "CIEĽ SPLNENÝ! 🏆";
+        else if (pct >= 60) msg.innerText = "Skvelé tempo, pokračuj! 🚀";
+        else msg.innerText = "Každý pohyb sa počíta! 💪";
+    }
+
+    all.forEach(cb => {
+        if (localStorage.getItem(cb.id) === 'true') cb.checked = true;
+        cb.addEventListener('change', () => {
+            localStorage.setItem(cb.id, cb.checked);
+            update();
+        });
+    });
+
+    function manualReset() { if(confirm('Naozaj resetovať?')) performReset(); }
+    function performReset() { 
+        all.forEach(cb => { cb.checked = false; localStorage.removeItem(cb.id); }); 
+        update(); 
+    }
+
+    checkAutoReset();
+    update();
+</script>
+
+</body>
+</html>
